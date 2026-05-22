@@ -1,4 +1,3 @@
-// Views/MainView.swift
 import SwiftUI
 
 struct MainView: View {
@@ -7,18 +6,13 @@ struct MainView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                LinearGradient(
-                    gradient: Gradient(colors: [Color(.systemGray6), Color(.systemBackground)]),
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .ignoresSafeArea()
+                Color.dashboardBackground.ignoresSafeArea()
 
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 18) {
                         header
 
-                        LazyVStack(spacing: 14) {
+                        LazyVStack(spacing: 12) {
                             ForEach(vm.vehicles) { vehicle in
                                 NavigationLink(destination: CarDetailView(vehicle: vehicle)) {
                                     VehicleCard(vehicle: vehicle)
@@ -30,18 +24,31 @@ struct MainView: View {
                     .padding()
                 }
             }
-            .navigationTitle("Select Vehicle")
+            .navigationTitle("OBD-II Companion")
+            .navigationBarTitleDisplayMode(.inline)
         }
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Vehicle Diagnostics")
+        VStack(alignment: .leading, spacing: 10) {
+            Label("Bluetooth OBD-II Proof of Concept", systemImage: "dot.radiowaves.left.and.right")
+                .font(.caption.weight(.bold))
+                .foregroundColor(.accentBlue)
+            Text("Real-time vehicle informatics from an OBD-II adapter")
                 .font(.system(.largeTitle, design: .rounded, weight: .bold))
-            Text("Select a vehicle to view live health and system data.")
+                .foregroundColor(.primaryText)
+            Text("Select a demo vehicle to simulate pairing, live PID updates, diagnostics, and drivetrain health from the vehicle port.")
                 .font(.subheadline)
-                .foregroundColor(.secondary)
+                .foregroundColor(.mutedText)
         }
+        .padding(18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(Color.cardBorder, lineWidth: 1)
+        )
     }
 }
 
@@ -49,51 +56,61 @@ private struct VehicleCard: View {
     let vehicle: Vehicle
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .top) {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: vehicle.fuelType == .electric ? "bolt.car.fill" : "car.fill")
+                    .font(.title2)
+                    .foregroundColor(.accentBlue)
+                    .frame(width: 44, height: 44)
+                    .background(Color.accentBlue.opacity(0.12))
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+
                 VStack(alignment: .leading, spacing: 4) {
                     Text("\(vehicle.make) \(vehicle.model)")
                         .font(.system(.title3, design: .rounded, weight: .semibold))
+                        .foregroundColor(.primaryText)
                     Text(vehicle.engine)
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
-                    Text("Estimated value: \(vehicle.price)")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.mutedText)
                 }
+
                 Spacer()
+
                 Text(vehicle.fuelType.displayName)
-                    .font(.caption)
+                    .font(.caption.weight(.bold))
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
-                    .background(vehicle.fuelType == .electric ? Color.teal.opacity(0.15) : Color.orange.opacity(0.15))
-                    .foregroundColor(vehicle.fuelType == .electric ? .teal : .orange)
-                    .cornerRadius(10)
+                    .background(Color.safetyGreen.opacity(0.12))
+                    .foregroundColor(.safetyGreen)
+                    .clipShape(Capsule())
             }
 
-            HStack(spacing: 16) {
+            HStack(spacing: 10) {
                 stat(icon: "speedometer", label: "HP", value: "\(vehicle.horsepower)")
                 stat(icon: "bolt.fill", label: "Torque", value: "\(vehicle.torqueNm) Nm")
-                stat(icon: "figure.seated.side.airbag.off", label: "Seats", value: "\(vehicle.seats)")
+                stat(icon: "antenna.radiowaves.left.and.right", label: "Link", value: "BT OBD-II")
             }
         }
         .padding()
-        .background(Color(.systemBackground))
-        .cornerRadius(16)
-        .shadow(color: Color.black.opacity(0.05), radius: 6, x: 0, y: 3)
+        .background(Color.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(Color.cardBorder, lineWidth: 1)
+        )
+        .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 4)
     }
 
     private func stat(icon: String, label: String, value: String) -> some View {
-        HStack(spacing: 6) {
-            Image(systemName: icon)
-                .foregroundColor(.blue)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(label)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                Text(value)
-                    .font(.subheadline)
-            }
+        VStack(alignment: .leading, spacing: 5) {
+            Label(label, systemImage: icon)
+                .font(.caption)
+                .foregroundColor(.mutedText)
+            Text(value)
+                .font(.caption.weight(.semibold))
+                .foregroundColor(.primaryText)
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }

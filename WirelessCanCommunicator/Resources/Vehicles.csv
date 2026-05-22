@@ -1,7 +1,7 @@
 make,model,engine,ccOrBattery,horsepower,topSpeedKmH,acceleration,price,fuelType,seats,torqueNm
-Tesla,Model S,Dual Motor,100 kWh,1020,322,2.1,$94,990,electric,5,1050
-Tesla,Model 3,Rear-Wheel Drive,60 kWh,283,225,5.8,$38,990,electric,5,350
-Toyota,Camry,2.5L I4,2500 cc,203,210,8.1,$28,000,gasoline,5,250
-Ford,F-150 Hybrid,3.5L V6 Hybrid,3500 cc + 1.5 kWh,430,180,5.9,$52,000,hybrid,5,773
-BMW,330e,2.0L Plug-In Hybrid,2000 cc + 12 kWh,288,230,5.7,$44,900,hybrid,5,420
-Volkswagen,Golf TDI,2.0L Turbo Diesel,2000 cc,147,215,8.8,$27,500,diesel,5,340
+Tesla,Model S,Dual Motor,100 kWh,1020,322,2.1,$94990,electric,5,1050
+Tesla,Model 3,Rear-Wheel Drive,60 kWh,283,225,5.8,$38990,electric,5,350
+Toyota,Camry,2.5L I4,2500 cc,203,210,8.1,$28000,gasoline,5,250
+Ford,F-150 Hybrid,3.5L V6 Hybrid,3500 cc + 1.5 kWh,430,180,5.9,$52000,hybrid,5,773
+BMW,330e,2.0L Plug-In Hybrid,2000 cc + 12 kWh,288,230,5.7,$44900,hybrid,5,420
+Volkswagen,Golf TDI,2.0L Turbo Diesel,2000 cc,147,215,8.8,$27500,diesel,5,340

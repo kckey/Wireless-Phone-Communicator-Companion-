@@ -20,7 +20,7 @@ final class VehicleListVM: ObservableObject {
     }
 
     private func loadCSVVehicles() -> [Vehicle]? {
-        guard let url = Bundle.main.url(forResource: "vehicles", withExtension: "csv"),
+        guard let url = Bundle.main.url(forResource: "Vehicles", withExtension: "csv"),
               let data = try? Data(contentsOf: url),
               let csv = String(data: data, encoding: .utf8) else {
             return nil

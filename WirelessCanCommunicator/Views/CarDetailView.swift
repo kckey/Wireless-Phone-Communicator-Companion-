@@ -1,4 +1,3 @@
-// Views/CarDetailView.swift
 import SwiftUI
 
 struct CarDetailView: View {
@@ -12,125 +11,132 @@ struct CarDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 20) {
-                headerCard
-
-                specsGrid
-
-                VStack(spacing: 14) {
-                    Text("Live Systems Check")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-
-                    CarDiagramView(
-                        diagnostics: vm.diagnostics,
-                        fuelType: vehicle.fuelType
-                    )
-
-                    HStack(spacing: 12) {
-                        if vehicle.fuelType == .electric {
-                            EVInfoView(diagnostics: vm.diagnostics)
-                        } else {
-                            ICEInfoView(diagnostics: vm.diagnostics)
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding()
-                    .background(Color(.secondarySystemBackground))
-                    .cornerRadius(14)
-                }
-
+            VStack(spacing: 16) {
+                connectionCard
+                liveGaugeGrid
+                CarDiagramView(diagnostics: vm.diagnostics, fuelType: vehicle.fuelType)
+                pidGrid
                 DiagnosticsButton(vm: vm)
-                    .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding()
         }
+        .background(Color.dashboardBackground.ignoresSafeArea())
         .navigationTitle("\(vehicle.make) \(vehicle.model)")
+        .navigationBarTitleDisplayMode(.inline)
     }
 
-    private var headerCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
+    private var connectionCard: some View {
+        VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("\(vehicle.make) \(vehicle.model)")
-                        .font(.system(.title, design: .rounded, weight: .bold))
-                    Text(vehicle.engine)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                    Text("Estimated value: \(vehicle.price)")
+                VStack(alignment: .leading, spacing: 5) {
+                    Text("Bluetooth OBD-II Link")
                         .font(.headline)
+                        .foregroundColor(.primaryText)
+                    Text("\(vm.adapterName) · \(vm.connectionState.rawValue)")
+                        .font(.subheadline)
+                        .foregroundColor(.mutedText)
                 }
                 Spacer()
-                VStack(alignment: .trailing, spacing: 8) {
-                    badge(text: vehicle.fuelType.displayName, color: vehicle.fuelType == .electric ? .teal : .orange)
-                    badge(text: vehicle.ccOrBattery, color: .blue)
+                statusPill
+            }
+
+            Text("Proof-of-concept live informatics stream from the vehicle OBD-II port. Values simulate common OBD-II PIDs such as RPM, speed, coolant temperature, voltage, throttle, and fuel/energy level.")
+                .font(.footnote)
+                .foregroundColor(.mutedText)
+
+            HStack(spacing: 10) {
+                Button(action: vm.connectionState.isLive ? vm.disconnect : vm.connect) {
+                    Label(vm.connectionState.isLive ? "Disconnect" : "Pair Adapter", systemImage: vm.connectionState.isLive ? "xmark.circle.fill" : "dot.radiowaves.left.and.right")
+                        .frame(maxWidth: .infinity)
                 }
+                .buttonStyle(PrimaryVehicleButtonStyle(active: !vm.connectionState.isLive))
+
+                Button(action: vm.requestDiagnostics) {
+                    Label("DTC Scan", systemImage: "waveform.path.ecg")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(SecondaryVehicleButtonStyle())
             }
 
-            HStack(spacing: 16) {
-                statTile(title: "0-100", value: "\(String(format: "%.1fs", vehicle.acceleration))")
-                statTile(title: "Top Speed", value: "\(vehicle.topSpeedKmH) km/h")
-                statTile(title: "Seats", value: "\(vehicle.seats)")
-            }
+            Text("Last update: \(vm.lastUpdated)")
+                .font(.caption)
+                .foregroundColor(.mutedText)
         }
-        .padding()
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            LinearGradient(
-                gradient: Gradient(colors: [Color.blue.opacity(0.15), Color.teal.opacity(0.25)]),
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        )
-        .cornerRadius(18)
+        .dashboardCard()
     }
 
-    private var specsGrid: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Powertrain")
-                .font(.headline)
-            HStack(spacing: 16) {
-                specRow(label: "Horsepower", value: "\(vehicle.horsepower) hp", icon: "speedometer")
-                specRow(label: "Torque", value: "\(vehicle.torqueNm) Nm", icon: "bolt.car")
-            }
-            .padding()
-            .background(Color(.secondarySystemBackground))
-            .cornerRadius(14)
-        }
-    }
-
-    private func badge(text: String, color: Color) -> some View {
-        Text(text)
-            .font(.caption)
+    private var statusPill: some View {
+        Text(vm.connectionState.isLive ? "LIVE" : vm.connectionState.rawValue.uppercased())
+            .font(.caption.weight(.bold))
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
-            .background(color.opacity(0.15))
-            .foregroundColor(color)
-            .cornerRadius(10)
+            .background(vm.connectionState.isLive ? Color.safetyGreen.opacity(0.14) : Color.warningAmber.opacity(0.16))
+            .foregroundColor(vm.connectionState.isLive ? .safetyGreen : .warningAmber)
+            .clipShape(Capsule())
     }
 
-    private func statTile(title: String, value: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(title)
-                .font(.caption)
-                .foregroundColor(.secondary)
-            Text(value)
+    private var liveGaugeGrid: some View {
+        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+            telemetryTile(title: "Speed", value: "\(vm.telemetry.speedMph)", unit: "mph", icon: "speedometer", tint: .accentBlue)
+            telemetryTile(title: "RPM", value: "\(vm.telemetry.rpm)", unit: "rev/min", icon: "gauge.with.dots.needle.67percent", tint: .safetyGreen)
+            telemetryTile(title: "Coolant", value: "\(vm.telemetry.coolantTempF)", unit: "F", icon: "thermometer.medium", tint: .warningAmber)
+            telemetryTile(title: vehicle.fuelType.energyLabel, value: "\(Int(vm.telemetry.fuelOrBatteryPercent))", unit: "%", icon: vehicle.fuelType == .electric ? "bolt.fill" : "fuelpump.fill", tint: .accentBlue)
+        }
+    }
+
+    private var pidGrid: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Live PID Stream")
                 .font(.headline)
+                .foregroundColor(.primaryText)
+
+            VStack(spacing: 10) {
+                pidRow("Throttle Position", "\(String(format: "%.1f", vm.telemetry.throttlePercent))%")
+                pidRow("Intake Air Temp", "\(vm.telemetry.intakeTempF) F")
+                pidRow("Fuel Trim", "\(String(format: "%.1f", vm.telemetry.fuelTrimPercent))%")
+                pidRow("Adapter Voltage", "\(String(format: "%.2f", vm.telemetry.voltage)) V")
+                pidRow("DTC Status", vm.telemetry.diagnosticTroubleCodes.isEmpty ? "No active codes" : vm.telemetry.diagnosticTroubleCodes.joined(separator: ", "))
+            }
+        }
+        .dashboardCard()
+    }
+
+    private func telemetryTile(title: String, value: String, unit: String, icon: String, tint: Color) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label(title, systemImage: icon)
+                .font(.caption.weight(.semibold))
+                .foregroundColor(.mutedText)
+            HStack(alignment: .lastTextBaseline, spacing: 4) {
+                Text(value)
+                    .font(.system(size: 32, weight: .bold, design: .rounded))
+                    .foregroundColor(.primaryText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                Text(unit)
+                    .font(.caption.weight(.bold))
+                    .foregroundColor(tint)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
-        .background(Color(.systemBackground).opacity(0.8))
-        .cornerRadius(12)
+        .background(tint.opacity(0.10))
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(tint.opacity(0.22), lineWidth: 1)
+        )
     }
 
-    private func specRow(label: String, value: String, icon: String) -> some View {
+    private func pidRow(_ label: String, _ value: String) -> some View {
         HStack {
-            Label(label, systemImage: icon)
-                .font(.headline)
+            Text(label)
+                .foregroundColor(.mutedText)
             Spacer()
             Text(value)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
+                .fontWeight(.semibold)
+                .foregroundColor(.primaryText)
+                .multilineTextAlignment(.trailing)
         }
+        .font(.subheadline)
     }
 }
